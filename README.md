@@ -16,8 +16,9 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn backend.app:app --reload --port 8000
 open http://localhost:8000
+```
 
-# Features
+## Features
 
 - Upload 23andMe raw text or simple VCF with rsIDs.
 
@@ -38,24 +39,24 @@ Upload 23andMe file → gets:
 - **SLCO1B1:** TC, decreased function → higher statin myopathy risk  
 - **HLA-B*57:01:** proxy absent → limited info  
 
-# Limitations
+## Limitations
 
 - No prescribing or dosing guidance  
 - Not guaranteed accurate for all populations  
 - Informational only  
 
-# Sources
+## Sources
 
-- CPIC  
-- PharmGKB  
+- [CPIC](https://cpicpgx.org/)
+- [ClinPGx](https://www.clinpgx.org/)    
 - FDA PGx Table & labeling (DailyMed/OpenFDA)  
 
-# Sample files
+## Sample files
 
 - `sample_data/23andme_example.txt`  
 - `sample_data/simple.vcf`  
 
-# Extending
+## Extending
 
 - Add genes in `backend/pgx_logic.py`; keep outputs non-prescriptive.  
 - Clinical use requires validation, QMS, risk management (ISO 14971), oversight, licensed knowledge base.

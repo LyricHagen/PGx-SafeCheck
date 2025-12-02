@@ -1,0 +1,7 @@
+# This is a tiny mock of a 23andMe raw file. Real files are larger.
+# rsid	chromosome	position	genotype
+rs4244285	10	94761939	AG
+rs4986893	10	94774753	GG
+rs12248560	10	96521657	CT
+rs4149056	12	21178612	TC
+rs2395029	6	31321649	GG

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PGx SafeCheck (Demo)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #0b1020; --card:#141a33; --text:#eef1ff; --muted:#9aa3c7; --accent:#8aa2ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 900px; margin: 40px auto; padding: 0 16px; }
+    .hero { margin-bottom: 24px; }
+    h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: 0.2px; }
+    p.muted { color: var(--muted); margin: 6px 0 0; }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02)), var(--card); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 860px){ .grid { grid-template-columns: 1.2fr 1fr; } }
+    label { font-weight: 600; font-size: 13px; color: var(--muted); }
+    input[type="file"], select { width: 100%; margin-top: 6px; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: #0f1530; color: var(--text); }
+    button { background: var(--accent); color: #0a0f1f; font-weight: 700; border: 0; padding: 12px 16px; border-radius: 10px; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .row { display: flex; gap: 12px; align-items: end; }
+    .result { margin-top: 18px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: rgba(138,162,255,0.12); border: 1px solid rgba(138,162,255,0.3); font-size: 12px; color: var(--accent); }
+    .rs { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+    .sep { height: 1px; background: rgba(255,255,255,0.08); margin: 14px 0; }
+    .note { color: var(--muted); font-size: 14px; }
+    .warning { color: #ffd29e; }
+    .gene-card { padding: 14px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(255,255,255,0.03); }
+    ul { margin: 8px 0 0 20px; }
+    code { background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 6px; }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>PGx SafeCheck <span class="pill">Demo • Not medical advice</span></h1>
+      <p class="muted">Upload a small 23andMe-style file or a simple VCF with rsIDs. You’ll get <strong>non-prescriptive</strong> gene–drug association summaries.<br/><span class="warning">Do not change medications based on this demo.</span></p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <form id="form">
+          <div class="row">
+            <div style="flex:1">
+              <label>Genotype file</label>
+              <input type="file" id="file" required />
+            </div>
+            <div style="width:200px">
+              <label>Format</label>
+              <select id="format">
+                <option value="23andme">23andMe (raw txt)</option>
+                <option value="vcf">VCF (rsIDs)</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <button id="go">Analyze</button>
+          </div>
+          <p class="note" style="margin-top:10px">Sample files:
+            <code>sample_data/23andme_example.txt</code> and <code>sample_data/simple.vcf</code> in this repo.</p>
+        </form>
+      </div>
+      <div class="card">
+        <div>
+          <strong>What you’ll see</strong>
+          <ul>
+            <li>Approximate <em>CYP2C19</em> metabolizer status (*2, *3, *17 only)</li>
+            <li><em>SLCO1B1</em> 521T&gt;C category</li>
+            <li><em>HLA-B*57:01</em> proxy status via rs2395029 (imperfect)</li>
+            <li>Plain-language explanations + citations placeholders</li>
+          </ul>
+          <p class="note">This is a teaching demo. For real use, integrate validated labs and guidelines with provenance and medical oversight.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const btn = document.getElementById('go');
+    const fileEl = document.getElementById('file');
+    const fmtEl = document.getElementById('format');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!fileEl.files[0]) return;
+      btn.disabled = true; result.innerHTML = '<p>Analyzing…</p>';
+
+      const fd = new FormData();
+      fd.append('file', fileEl.files[0]);
+      fd.append('file_format', fmtEl.value);
+
+      try {
+        const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        renderReport(data);
+      } catch (err) {
+        result.innerHTML = '<div class="card"><strong>Error:</strong> ' + (err.message || err) + '</div>';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function renderReport(data){
+      const { summary = [], results = [], observed_rsids = {}, missing_rsids = [] } = data || {};
+      let html = '';
+      html += '<div class="card">';
+      html += '<h3 style="margin:0 0 8px">Summary</h3>';
+      html += '<ul>' + summary.map(s => '<li>' + s + '</li>').join('') + '</ul>';
+      html += '<div class="sep"></div>';
+      html += '<div class="note">Observed rsIDs: ';
+      html += Object.keys(observed_rsids).length ? Object.keys(observed_rsids).map(rs => '<span class="rs">'+rs+'</span>').join(', ') : 'none';
+      if (missing_rsids.length){
+        html += '<br/>Missing rsIDs needed for this demo: ' + missing_rsids.map(rs => '<span class="rs">'+rs+'</span>').join(', ');
+      }
+      html += '</div>';
+      html += '</div>';
+
+      for (const r of results){
+        html += '<div class="gene-card">';
+        html += '<h3 style="margin:0 0 6px">'+(r.gene || 'Gene')+'</h3>';
+        html += '<p class="note">';
+        if (r.diplotype) html += '<strong>Approx diplotype:</strong> ' + r.diplotype + '<br/>';
+        if (r.phenotype) html += '<strong>Approx phenotype:</strong> ' + r.phenotype + '<br/>';
+        if (r.functional_category) html += '<strong>Functional category:</strong> ' + r.functional_category + '<br/>';
+        if (r.proxy_status) html += '<strong>Proxy status:</strong> ' + r.proxy_status + '<br/>';
+        if (r.genotype && !r.diplotype) html += '<strong>Genotype:</strong> ' + r.genotype + '<br/>';
+        html += '</p>';
+        if (r.caveats && r.caveats.length){
+          html += '<p class="note"><strong>Caveats</strong></p><ul>';
+          html += r.caveats.map(c => '<li class="note">'+c+'</li>').join('');
+          html += '</ul>';
+        }
+        if (r.associations && r.associations.length){
+          html += '<div class="sep"></div>';
+          for (const a of r.associations){
+            html += '<p><strong>Area:</strong> '+a.area+'<br/>';
+            html += '<strong>Drug examples:</strong> '+(a.drug_examples||[]).join(', ')+'<br/>';
+            html += '<strong>Summary:</strong> '+a.summary+'<br/>';
+            html += '<span class="note"><strong>Evidence:</strong> '+(a.strength||'')+'</span></p>';
+            if (a.notes && a.notes.length){
+              html += '<ul>'+a.notes.map(n => '<li class="note">'+n+'</li>').join('')+'</ul>';
+            }
+            if (a.sources && a.sources.length){
+              html += '<p class="note"><strong>Sources:</strong> '+a.sources.join(' • ')+'</p>';
+            }
+          }
+        }
+        html += '</div>';
+      }
+      result.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

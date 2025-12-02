@@ -1,10 +1,10 @@
-# PGx SafeCheck (Demo)
+# PGx SafeCheck
 
-Minimal **pharmacogenomics (PGx)** demo: upload genetic data, get **informative, non-prescriptive** gene–drug associations.  
+Minimal **pharmacogenomics (PGx)** app: upload genetic data, get **informative, non-prescriptive** gene–drug associations.  
 Not a medical device; strictly **educational/decision-support**.
 
 **⚠️ Safety**
-- **Not medical advice** — do not change medications based on this demo.
+- **Not medical advice** — do not change medications based on this app.
 - Findings are **limited**; CNVs, rare variants, phased haplotypes, and ancestry-specific effects are not fully handled.
 - Focused on **CYP2C19, SLCO1B1, HLA-B*57:01 (proxy)**. CYP2D6 is omitted (complex).
 

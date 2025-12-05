@@ -60,3 +60,9 @@ Upload 23andMe file → gets:
 
 - Add genes in `backend/pgx_logic.py`; keep outputs non-prescriptive.  
 - Clinical use requires validation, QMS, risk management (ISO 14971), oversight, licensed knowledge base.
+
+
+<br>
+
+© 2025 Lyric Hagen. All rights reserved. 
+This project was created by Lyric Hagen. Do not present or distribute as your own work.
